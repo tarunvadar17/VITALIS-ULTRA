@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitalis Ultra | Enterprise Health OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #22c55e;
+            --secondary: #3b82f6;
+            --accent: #a855f7;
+            --bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+
+        /* Premium Animated Background */
+        .bg-mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.07) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            filter: blur(80px);
+            animation: pulseBg 10s infinite alternate;
+        }
+
+        @keyframes pulseBg {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        /* Navigation */
+        header {
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(25px);
+            padding: 1.2rem 6%;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 8px; }
+        .logo span { color: var(--primary); }
+
+        nav { display: flex; gap: 8px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 16px; border: 1px solid var(--border); }
+        nav button {
+            padding: 10px 22px; border: none; border-radius: 12px;
+            background: transparent; color: var(--text-dim); cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 600; font-size: 0.85rem;
+        }
+        nav button:hover { color: #fff; }
+        nav button.active-nav { background: var(--primary); color: #000; box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3); }
+
+        /* Container & Layout */
+        .container { max-width: 1400px; margin: auto; padding: 40px 6%; }
+        .page { display: none; animation: slideUp 0.6s ease; }
+        .page.active { display: block; }
+        
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Premium Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .card:hover { border-color: rgba(34, 197, 94, 0.3); transform: translateY(-4px); }
+
+        .dash-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px; }
+
+        /* Typography */
+        .label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+        .metric-value { font-size: 2.8rem; font-weight: 800; margin: 8px 0; letter-spacing: -1.5px; }
+
+        /* Inputs & Buttons */
+        .input-group { margin-bottom: 20px; }
+        input {
+            width: 100%; padding: 18px; border-radius: 16px; border: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.8); color: white; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
+
+        .btn {
+            width: 100%; padding: 18px; border: none; border-radius: 18px;
+            background: linear-gradient(135deg, var(--primary), #16a34a);
+            color: #052e16; font-weight: 800; font-size: 1rem; cursor: pointer;
+            transition: 0.4s; box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.4);
+            position: relative; overflow: hidden;
+        }
+        .btn:hover { transform: scale(1.02); opacity: 0.9; }
+        
+        .btn:active { transform: scale(0.98); }
+
+        /* Authentication UI */
+        #auth-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .auth-card { 
+            width: 100%; max-width: 460px; padding: 45px; border-radius: 35px; 
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Profile Header */
+        .profile-hero {
+            display: flex; align-items: center; gap: 30px; margin-bottom: 40px;
+            padding: 30px; background: linear-gradient(90deg, rgba(34,197,94,0.1), transparent);
+            border-radius: 30px; border-left: 4px solid var(--primary);
+        }
+        .avatar-circle {
+            width: 110px; height: 110px; border-radius: 35px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; font-weight: 800; color: #000;
+        }
+
+        table { width: 100%; border-spacing: 0 10px; }
+        th { text-align: left; padding: 0 15px; color: var(--text-dim); font-size: 0.75rem; }
+        td { padding: 18px 15px; background: rgba(255,255,255,0.02); }
+        td:first-child { border-radius: 12px 0 0 12px; }
+        td:last-child { border-radius: 0 12px 12px 0; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+
+<!-- Login/Register Overlay -->
+<section id="auth-overlay">
+    <div class="card auth-card" id="login-box">
+        <div class="logo" style="font-size: 1.8rem; margin-bottom: 30px;"><span>VITALIS</span> ULTRA</div>
+        <h2 style="margin-bottom: 8px;">Quantum Access</h2>
+        <p style="color: var(--text-dim); margin-bottom: 35px;">Authenticate to sync your biometric cloud.</p>
+        
+        <div class="input-group">
+            <label class="label">Identity ID</label>
+            <input type="text" id="loginId" placeholder="ex: admin_01">
+        </div>
+        <div class="input-group">
+            <label class="label">Access Key</label>
+            <input type="password" id="loginPass" placeholder="••••••••">
+        </div>
+        
+        <button class="btn" onclick="handleLogin()">Initialize Session</button>
+        <p style="text-align:center; margin-top: 25px; color: var(--text-dim); font-size: 0.9rem;">
+            New to Vitalis? <span style="color: var(--primary); cursor:pointer; font-weight: 700;" onclick="toggleAuth()">Create Identity</span>
+        </p>
+    </div>
+
+    <div class="card auth-card hidden" id="register-box">
+        <h2 style="margin-bottom: 10px;">New Identity</h2>
+        <div style="max-height: 400px; overflow-y: auto; padding-right: 15px;">
+            <div class="input-group"><label class="label">Full Name</label><input type="text" id="regName"></div>
+            <div class="input-group"><label class="label">Identity ID (ex: admin)</label><input type="text" id="regId"></div>
+            <div class="input-group"><label class="label">Access Key</label><input type="password" id="regPass"></div>
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-top: 10px;">
+                <div class="input-group"><label class="label">Age</label><input type="number" id="regAge"></div>
+                <div class="input-group"><label class="label">Weight (kg)</label><input type="number" id="regWeight"></div>
+            </div>
+            <div class="input-group"><label class="label">Height (cm)</label><input type="number" id="regHeight"></div>
+        </div>
+        <button class="btn" style="margin-top: 20px;" onclick="handleRegister()">Establish Identity</button>
+        <p style="text-align:center; margin-top: 25px; color: var(--text-dim); font-size: 0.9rem;" onclick="toggleAuth()">
+            Return to <span style="color: var(--secondary); cursor:pointer; font-weight: 700;">Login</span>
+        </p>
+    </div>
+</section>
+
+<!-- Main System -->
+<div id="vitalis-system" style="display: none;">
+    <header>
+        <div class="logo">VITALIS <span>ULTRA</span></div>
+        <nav>
+            <button onclick="showPage('home')" id="nav-home" class="active-nav">Overview</button>
+            <button onclick="showPage('entry')" id="nav-entry">Log Sync</button>
+            <button onclick="showPage('dashboard')" id="nav-dashboard">Analytics</button>
+            <button onclick="showPage('tools')" id="nav-tools">Nutrition</button>
+            <button onclick="showPage('profile')" id="nav-profile">Identity</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Overview -->
+        <section id="home" class="page active">
+            <div style="padding: 100px 0; max-width: 800px;">
+                <span class="label" style="color: var(--primary); margin-bottom: 20px; display: block;">v3.0 ENTERPRISE OS</span>
+                <h1 style="font-size: 5rem; font-weight: 800; line-height: 0.9; margin-bottom: 30px; letter-spacing: -4px;">The Human <br>Dashboard.</h1>
+                <p style="color: var(--text-dim); font-size: 1.4rem; margin-bottom: 40px; line-height: 1.6;">Precision health monitoring, clinical-grade analytics, and automated nutrition—all within your private biometric cloud.</p>
+                <button class="btn" style="width: auto; padding: 20px 60px;" onclick="showPage('entry')">Begin Sync</button>
+            </div>
+        </section>
+
+        <!-- Identity / Profile -->
+        <section id="profile" class="page">
+            <div class="profile-hero">
+                <div class="avatar-circle" id="profInitial">A</div>
+                <div>
+                    <h1 id="profNameDisplay" style="font-size: 2.5rem; letter-spacing: -1px;">Admin User</h1>
+                    <p id="profIdDisplay" style="color: var(--secondary); font-weight: 600; font-size: 1.1rem;">@admin</p>
+                </div>
+            </div>
+            <div class="dash-grid" style="grid-template-columns: 1.5fr 1fr;">
+                <div class="card">
+                    <h3 class="label" style="margin-bottom: 30px;">Biological Specs</h3>
+                    <div class="stats-grid">
+                        <div class="card" style="background: rgba(255,255,255,0.03);">
+                            <label class="label">Age</label>
+                            <div class="metric-value" id="dispAge" style="font-size: 2rem;">--</div>
+                        </div>
+                        <div class="card" style="background: rgba(255,255,255,0.03);">
+                            <label class="label">Current Weight</label>
+                            <div class="metric-value" id="dispWeight" style="font-size: 2rem;">-- kg</div>
+                        </div>
+                        <div class="card" style="background: rgba(255,255,255,0.03);">
+                            <label class="label">Height</label>
+                            <div class="metric-value" id="dispHeight" style="font-size: 2rem;">-- cm</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" style="display: flex; flex-direction: column; justify-content: center; text-align: center;">
+                    <label class="label">System Integrity</label>
+                    <div class="metric-value" style="color: var(--primary); font-size: 4rem;">99.9%</div>
+                    <button class="btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; box-shadow: none;" onclick="location.reload()">Terminate Session</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Entry -->
+        <section id="entry" class="page">
+            <div class="dash-grid">
+                <div class="card">
+                    <h3 class="label" style="margin-bottom: 30px;">Manual Telemetry Entry</h3>
+                    <div class="stats-grid">
+                        <div class="input-group"><label class="label">Heart Rate (BPM)</label><input type="number" id="inHR" placeholder="72"></div>
+                        <div class="input-group"><label class="label">Steps Taken</label><input type="number" id="inSteps" placeholder="10000"></div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="input-group"><label class="label">Sleep Duration (H)</label><input type="number" id="inSleep" placeholder="8"></div>
+                        <div class="input-group"><label class="label">Oxygen Saturation (%)</label><input type="number" id="inSpo2" placeholder="98"></div>
+                    </div>
+                    <button class="btn" onclick="syncData()">Broadcast Vitals</button>
+                </div>
+                <div class="card">
+                    <h3 class="label">Live System Log</h3>
+                    <div id="logFeed" style="margin-top: 20px; font-size: 0.85rem; line-height: 2;">
+                        <div style="color: var(--primary);">● Connection Secure</div>
+                        <div style="color: var(--text-dim);">● Biometric handshake successful</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Dashboard -->
+        <section id="dashboard" class="page">
+            <div class="stats-grid">
+                <div class="card">
+                    <span class="label">Pulse Analytics</span>
+                    <span class="metric-value" id="valHR" style="color: var(--primary);">--</span>
+                    <p style="font-size: 0.7rem; color: var(--text-dim);">STABLE TREND</p>
+                </div>
+                <div class="card">
+                    <span class="label">Daily Mobility</span>
+                    <span class="metric-value" id="valSteps" style="color: var(--secondary);">--</span>
+                    <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 15px;">
+                        <div id="stepBar" style="width: 0%; height: 100%; background: var(--secondary); border-radius: 10px; transition: 1.5s ease;"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <span class="label">Recovery & SPO2</span>
+                    <div style="display:flex; justify-content: space-between; align-items: baseline; margin-top: 15px;">
+                        <span id="valSpo2" style="font-size: 2rem; font-weight: 800;">--%</span>
+                        <span id="valSleep" style="font-size: 2rem; font-weight: 800; color: var(--accent);">--h</span>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-grid">
+                <div class="card" style="min-height: 300px;"><canvas id="mainChart"></canvas></div>
+                <div class="card" style="text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                    <label class="label">Vitalis Score</label>
+                    <div id="healthScore" style="font-size: 5rem; font-weight: 800; color: var(--primary); margin: 20px 0;">0</div>
+                    <p style="color: var(--text-dim); font-size: 0.8rem;">Calculated via biometric variance.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nutrition Engine -->
+        <section id="tools" class="page">
+            <div class="dash-grid">
+                <div class="card">
+                    <h3 class="label" style="margin-bottom: 25px;">Metabolic Diet Engine</h3>
+                    <div class="input-group"><label class="label">Target Weight (kg)</label><input type="number" id="uWeight"></div>
+                    <div class="input-group"><label class="label">Height (cm)</label><input type="number" id="uHeight"></div>
+                    <button class="btn" onclick="buildDiet()">Generate Nutrition Plan</button>
+                </div>
+                <div class="card" id="dietBox" style="display:none;">
+                    <h3 id="calorieHead" style="margin-bottom: 20px; font-size: 1.2rem; font-weight: 700;">Plan</h3>
+                    <table>
+                        <thead><tr><th>MEAL</th><th>NUTRITION</th><th>KCAL</th></tr></thead>
+                        <tbody id="dietTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    let activeUser = null;
+    let mainChart = null;
+
+    function toggleAuth() {
+        document.getElementById('login-box').classList.toggle('hidden');
+        document.getElementById('register-box').classList.toggle('hidden');
+    }
+
+    function handleRegister() {
+        const u = {
+            name: document.getElementById('regName').value,
+            id: document.getElementById('regId').value,
+            pass: document.getElementById('regPass').value,
+            age: document.getElementById('regAge').value,
+            weight: document.getElementById('regWeight').value,
+            height: document.getElementById('regHeight').value
+        };
+        if(!u.id || !u.pass) return alert("Credentials Required");
+        localStorage.setItem('v_user_' + u.id, JSON.stringify(u));
+        alert("Identity Established.");
+        toggleAuth();
+    }
+
+    function handleLogin() {
+        const id = document.getElementById('loginId').value;
+        const pass = document.getElementById('loginPass').value;
+        const data = localStorage.getItem('v_user_' + id);
+        if(data) {
+            const u = JSON.parse(data);
+            if(u.pass === pass) {
+                activeUser = u;
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('vitalis-system').style.display = 'block';
+                loadProfile();
+            } else alert("Access Denied: Invalid Key");
+        } else alert("Identity Not Found");
+    }
+
+    function loadProfile() {
+        document.getElementById('profNameDisplay').innerText = activeUser.name;
+        document.getElementById('profIdDisplay').innerText = "@" + activeUser.id;
+        document.getElementById('profInitial').innerText = activeUser.name[0].toUpperCase();
+        document.getElementById('dispAge').innerText = activeUser.age;
+        document.getElementById('dispWeight').innerText = activeUser.weight + " kg";
+        document.getElementById('dispHeight').innerText = activeUser.height + " cm";
+        document.getElementById('uWeight').value = activeUser.weight;
+        document.getElementById('uHeight').value = activeUser.height;
+        initChart();
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('nav-' + id).classList.add('active-nav');
+    }
+
+    function syncData() {
+        const hr = document.getElementById('inHR').value || 72;
+        const st = document.getElementById('inSteps').value || 0;
+        document.getElementById('valHR').innerText = hr + " BPM";
+        document.getElementById('valSteps').innerText = parseInt(st).toLocaleString();
+        document.getElementById('valSleep').innerText = (document.getElementById('inSleep').value || 0) + "h";
+        document.getElementById('valSpo2').innerText = (document.getElementById('inSpo2').value || 98) + "%";
+        document.getElementById('stepBar').style.width = Math.min((st/10000)*100, 100) + "%";
+        document.getElementById('healthScore').innerText = Math.round(90 + Math.random()*10);
+        
+        const newLog = document.createElement('div');
+        newLog.style.color = 'var(--secondary)';
+        newLog.innerText = `● Telemetry Synced: ${hr}BPM / ${st} Steps`;
+        document.getElementById('logFeed').prepend(newLog);
+        
+        showPage('dashboard');
+    }
+
+    function buildDiet() {
+        const tdee = Math.round(((10 * activeUser.weight) + (6.25 * activeUser.height) - (5 * activeUser.age) + 5) * 1.4);
+        document.getElementById('dietBox').style.display = 'block';
+        document.getElementById('calorieHead').innerText = tdee + " KCAL TARGET";
+        document.getElementById('dietTable').innerHTML = `
+            <tr><td>Breakfast</td><td>Protein Shake & Fruit</td><td>${Math.round(tdee*.25)}</td></tr>
+            <tr><td>Lunch</td><td>Lean Protein & Greens</td><td>${Math.round(tdee*.40)}</td></tr>
+            <tr><td>Dinner</td><td>Healthy Fats & Complex Carbs</td><td>${Math.round(tdee*.35)}</td></tr>`;
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if(mainChart) mainChart.destroy();
+        mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    data: [65, 62, 78, 85, 72, 70],
+                    borderColor: '#22c55e',
+                    borderWidth: 3,
+                    tension: 0.5,
+                    fill: true,
+                    backgroundColor: 'rgba(34, 197, 94, 0.05)',
+                    pointRadius: 0
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { 
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }, 
+                    y: { display: false } 
+                }, 
+                plugins: { legend: { display: false } } 
+            }
+        });
+    }
+</script>
+</body>
+</html>
